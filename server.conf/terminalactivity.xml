@@ -1,0 +1,26 @@
+<jauus>
+	<structure>
+		<softwarehome>terminalactivity</softwarehome>
+		<autostart>false</autostart>
+		<autostartargs>java -cp terminalActivity.jar atma.TerminalActivity</autostartargs>
+	</structure>
+<!-- list the files you want to exclude -->
+	<exclude>
+		<file-0>blah_.jar</file-0>
+		<file-1>two</file-1>
+		<file-2>three</file-2>
+		<file-3>four</file-3>
+		<file-4>five</file-4>
+		<file-5>NewWar.jpx.local~</file-5>
+	</exclude>
+<!-- leave blank for all files -->
+	<extensions>
+<!--
+		<jar>jar</jar>
+		<sh>sh</sh>
+-->
+	</extensions>
+	<excludeExtensions>
+		<tar>tar</tar>
+	</excludeExtensions>
+</jauus>

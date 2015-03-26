@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<project name="JAUUS Windows Ant Build Script" default="jar">
+  <description>Create the Primay JAUUS Jar File</description>
+
+  <property name="AUTAR" value="..\jar\jauusClient.jar"/>
+  <property name="AUCLASSES" value="..\jarclasses"/>
+  <property name="AUSRC" value="..\src"/>
+
+  <property name="CONFIGHOME" value="..\src\integrity"/>
+  <property name="CONFIGBASE" value="..\jarclasses\integrity"/>
+
+  <property name="build.compiler" value="jikes"/>
+
+  <target name="clean" description="delete any residual code">
+    <delete file="${AUTAR}" />
+    <delete dir="${AUCLASSES}" />
+    <mkdir dir="${AUCLASSES}" />
+  </target>
+
+  <target name="compile" depends="clean" description="compile the source">
+    <javac srcdir="${AUSRC}"
+           destdir="${AUCLASSES}"
+	   includes="*/**"
+  	/>
+    </target>
+
+    <target name="filecopy" depends="compile" description="copy working files over">
+      <copy file="${CONFIGHOME}\client.properties" todir="${CONFIGBASE}"/>
+      <copy file="${CONFIGHOME}\server\server.properties" todir="${CONFIGBASE}/server/"/>
+    </target>
+
+    <target name="jar" depends="filecopy" description="jar the application">
+      <jar jarfile="${AUTAR}"
+        basedir="${AUCLASSES}"
+        includes="**">
+        <manifest>
+          <attribute name="Built-By" value="Steve Gee"/>
+          <attribute name="user-Email" value="ioexcept@cox.net"/>
+          <attribute name="Main-Class" value="integrity.client.JAUUS"/>
+        </manifest>
+      </jar>
+     <delete dir="${AUCLASSES}" />
+     <mkdir dir="${AUCLASSES}" />
+    </target>
+
+  </project>

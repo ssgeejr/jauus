@@ -1,0 +1,286 @@
+/*************************************************************************
+ Copyright (C) 2004  Steve Gee
+ ioexcept@cox.net
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *************************************************************************/
+
+package integrity.client;
+
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.*;
+import integrity.*;
+import integrity.interfaces.ClientListener;
+
+public class JAUUSUI extends JWindow {
+  private boolean isAnimating = false;
+  private int maxTask = 100;
+  private int completedTask = 0;
+  private ClientListenerInstance clInstance;
+  private CheckSumUtility updater;
+  private boolean useGUI = false;
+  private Thread timer = new Thread();
+//-------------------------------------------------
+  private ImageIcon staticImage;
+  private ImageIcon animation;
+  private ImageIcon splashScreen;
+  private JPanel contentPane;
+  private BorderLayout borderLayout1;
+  private JProgressBar totalProgress;
+  private JPanel jPanel1;
+  private JLabel jLabel1;
+  private JLabel jLabel2;
+  private JLabel jlLocal;
+  private JLabel jlServer;
+  private JLabel jlResult;
+  private JLabel jlNewTask;
+  private JLabel jLabel3;
+  private JLabel jlCheckFile;
+  private JLabel jLabel5;
+  private JLabel jlFileCount;
+  private JLabel imageLabel;
+  private JLabel throbber;
+
+//-------------------------------------------------
+
+  public JAUUSUI() {
+    try {
+      jbInit();
+    } catch(Exception ex) {
+      ex.printStackTrace();
+    }
+  }
+
+  //Construct the frame
+  public JAUUSUI(boolean _useGUI) {
+    enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+    useGUI = _useGUI;
+    clInstance = new ClientListenerInstance();
+    try {
+      if(_useGUI){
+        staticImage = new ImageIcon();
+        animation = new ImageIcon();
+        borderLayout1 = new BorderLayout();
+        jPanel1 = new JPanel();
+        totalProgress = new JProgressBar(JProgressBar.HORIZONTAL, 0, 10);
+        jLabel1 = new JLabel();
+        jLabel2 = new JLabel();
+        jlLocal = new JLabel();
+        jlServer = new JLabel();
+        jlResult = new JLabel();
+        jlNewTask = new JLabel();
+        jLabel3 = new JLabel();
+        jlCheckFile = new JLabel();
+        jLabel5 = new JLabel();
+        jlFileCount = new JLabel();
+        imageLabel = new JLabel();
+        splashScreen = new ImageIcon();
+        throbber = new JLabel();
+        jbInit();
+      }else{
+
+      }
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  //Component initialization
+  private void jbInit() throws Exception {
+    contentPane = (JPanel)this.getContentPane();
+    contentPane.setLayout(borderLayout1);
+    this.setSize(new Dimension(400, 225));
+    jPanel1.setLayout(null);
+    jLabel1.setFont(new java.awt.Font("Comic Sans MS", 0, 12));
+    jLabel1.setForeground(Color.blue);
+    jLabel1.setHorizontalAlignment(SwingConstants.TRAILING);
+    jLabel1.setText("Local File Checksum: ");
+    jLabel1.setBounds(new Rectangle(69, 103, 186, 14));
+    jLabel2.setFont(new java.awt.Font("Comic Sans MS", 0, 12));
+    jLabel2.setForeground(Color.blue);
+    jLabel2.setHorizontalAlignment(SwingConstants.TRAILING);
+    jLabel2.setText("Server File Checksum: ");
+    jLabel2.setBounds(new Rectangle(69, 82, 186, 14));
+    jlLocal.setFont(new java.awt.Font("Comic Sans MS", 0, 12));
+    jlLocal.setForeground(Color.blue);
+    jlLocal.setBounds(new Rectangle(263, 103, 131, 14));
+    jlServer.setFont(new java.awt.Font("Comic Sans MS", 0, 12));
+    jlServer.setForeground(Color.blue);
+    jlServer.setBounds(new Rectangle(263, 82, 131, 14));
+    jlResult.setFont(new java.awt.Font("Dialog", 0, 14));
+    jlResult.setForeground(Color.blue);
+    jlResult.setHorizontalAlignment(SwingConstants.CENTER);
+    jlResult.setText("checking...");
+    jlResult.setBounds(new Rectangle(70, 154, 261, 17));
+    jlNewTask.setFont(new java.awt.Font("Comic Sans MS", 0, 14));
+    jlNewTask.setForeground(Color.red);
+    jlNewTask.setHorizontalAlignment(SwingConstants.CENTER);
+    jlNewTask.setBounds(new Rectangle(70, 129, 261, 17));
+    jLabel3.setFont(new java.awt.Font("Comic Sans MS", Font.PLAIN, 14));
+    jLabel3.setForeground(Color.black); jLabel3.setHorizontalAlignment(SwingConstants.CENTER);
+    jLabel3.setText("Java Application Update Utility Software");
+    jLabel3.setBounds(new Rectangle(6, 7, 388, 17));
+    jlCheckFile.setFont(new java.awt.Font("Comic Sans MS", Font.ITALIC, 12));
+    jlCheckFile.setForeground(Color.blue);
+    jlCheckFile.setHorizontalAlignment(SwingConstants.CENTER);
+    jlCheckFile.setText("Checking File: ");
+    jlCheckFile.setBounds(new Rectangle(8, 46, 385, 17));
+    totalProgress.setBounds(new Rectangle(37, 197, 327, 16));
+    jLabel5.setFont(new java.awt.Font("Comic Sans MS", Font.PLAIN, 11));
+    jLabel5.setForeground(Color.gray);
+    jLabel5.setText("Total Progress");
+    jLabel5.setBounds(new Rectangle(37, 181, 119, 14));
+    jlFileCount.setFont(new java.awt.Font("Comic Sans MS", Font.ITALIC, 12));
+    jlFileCount.setForeground(Color.gray); jlFileCount.setText("(0/0)");
+    jlFileCount.setBounds(new Rectangle(160, 181, 188, 14));
+    imageLabel.setMaximumSize(new Dimension(390, 215));
+    imageLabel.setMinimumSize(new Dimension(390, 215));
+    throbber.setText("");
+    throbber.setBounds(new Rectangle(5, 66, 114, 72));
+    contentPane.add(jPanel1, BorderLayout.CENTER);
+    jPanel1.add(jLabel3, null);
+    jPanel1.add(jlResult, null);
+    jPanel1.add(jlNewTask, null);
+    jPanel1.add(jlFileCount);
+    jPanel1.add(jLabel5);
+    jPanel1.add(totalProgress);
+
+    jPanel1.add(jlCheckFile);
+//    splashScreen = new ImageIcon(new ResourceLocator().getClass().getResource("jauus.gif"));
+//    imageLabel.setIcon(splashScreen);
+//    imageLabel.setBounds(new Rectangle(5, 5, 390, 215));
+//    jPanel1.add(imageLabel, null);
+    jPanel1.add(throbber, null);
+    jPanel1.add(jlServer, null);
+    jPanel1.add(jlLocal, null);
+    jPanel1.add(jLabel2, null);
+    jPanel1.add(jLabel1, null);
+
+    animation = new ImageIcon(new ResourceLocator().getClass().getResource("throbber.gif"));
+//    staticImage = new ImageIcon(new ResourceLocator().getClass().getResource("staticgear.gif"));
+    throbber.setIcon(animation);
+  }
+
+  public void runUpdate(){
+    Thread updateThread = new Thread(new IntegrityClient(clInstance));
+    updateThread.start();
+  }
+
+  public void doAnimation(){
+    if(isAnimating){
+      throbber.setIcon(staticImage);
+      isAnimating = false;
+    }else{
+      throbber.setIcon(animation);
+      isAnimating = true;
+    }
+  }
+
+  private void startApplication(boolean restart, String args){
+    this.dispose();
+    if(restart){
+      try {
+        Runtime.getRuntime().exec(args);
+      } catch(Exception ex) {
+        ex.printStackTrace();
+      }
+    }//end if
+    System.exit(0);
+  }
+
+  public void updateMaxTaskCount(int count){
+    maxTask = count;
+    if(useGUI){
+      totalProgress.setMaximum(count);
+      totalProgress.setValue(completedTask);
+      jlFileCount.setText("( " + completedTask + " / " + maxTask + " )");
+    }else{
+      System.out.println("Maximum Task: " + maxTask);
+    }
+  }
+
+  public void updatePrimaryStatus(String msg){
+    if(useGUI){
+      jlNewTask.setText(msg);
+    }else{
+      System.out.println(msg);
+    }
+  }
+
+  public void updateLocalStatus(String msg){
+    if(useGUI){
+      jlResult.setText(msg);
+    }else{
+      System.out.println(msg);
+    }
+  }
+  public void updateTaskCount(){
+    completedTask++;
+    if(useGUI){
+      totalProgress.setValue(completedTask);
+      jlFileCount.setText("( " + completedTask + " / " + maxTask + " )");
+    }else{
+      System.out.println(completedTask + " of " + maxTask);
+    }
+  }
+
+  public void updateFileStatus(String msg){
+    jlCheckFile.setText("Checking File: " + msg);
+  }
+
+  public void updateServerChecksum(long cs){
+    jlServer.setText("" + cs);
+  }
+
+  public void updateLocalChecksum(long cs){
+    jlLocal.setText("" + cs);
+  }
+
+  public class ClientListenerInstance implements ClientListener {
+    public void setTaskCount(int count){
+      updateMaxTaskCount(count);
+    }
+    public void setPrimaryStatus(String msg) {
+      updatePrimaryStatus(msg);
+    }
+
+    public void setLocalStatus(String msg) {
+      updateLocalStatus(msg);
+    }
+
+    public void incrementFileCount() {
+      updateTaskCount();
+    }
+
+    public void setFileStatus(String msg){
+      updateFileStatus(msg);
+    }
+    public void setServerChecksum(long cs){
+      updateServerChecksum(cs);
+    }
+    public void setLocalChecksum(long cs){
+      updateLocalChecksum(cs);
+    }
+    public void completeApplication(boolean restart, String args){
+      startApplication(restart,args);
+    }
+
+    public void animate(){
+      doAnimation();
+    }
+  }
+
+
+}
